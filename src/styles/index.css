@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: #f3f3f3;
+    color: #1f1f1f;
+    overflow: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d1d1d1;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b0b0b0;
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer utilities {
+  .font-fluent {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .shadow-fluent-sm {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  .shadow-fluent {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .shadow-fluent-lg {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .check-paper-shadow {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  .field-frame {
+    transition: left 0.06s ease-out, top 0.06s ease-out, font-size 0.06s ease-out;
+  }
+}
+
+/* ── Print Styles ───────────────────────────────────────────────────────────── */
+@media print {
+  @page {
+    margin: 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    text-shadow: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  header,
+  aside,
+  .print-hide {
+    display: none !important;
+  }
+
+  #root,
+  main,
+  main > div,
+  #check-print-root,
+  #check-print-root > div,
+  #print-canvas-area {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  #check-canvas-paper {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Strip scanned background image strictly on print */
+  #check-canvas-paper img {
+    display: none !important;
+  }
+
+  #check-canvas-paper .field-frame,
+  #check-canvas-paper [style*="color:"] {
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  #check-canvas-paper .w-full.bg-\[\#111\] {
+    background-color: #000000 !important;
+  }
+
+  #check-canvas-paper span.font-mono {
+    border: none !important;
+    background: transparent !important;
+    color: #000000 !important;
+  }
+}
