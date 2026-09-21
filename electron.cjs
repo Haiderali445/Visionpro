@@ -151,6 +151,14 @@ ipcMain.handle('print:check', async (event, opts = {}) => {
         deviceName: physicalPrinter,
         pageSize: { width: widthMicrons, height: heightMicrons },
         margins: { marginType: 'none' },
+        // ── Orientation Lock ────────────────────────────────────────────────
+        // All cheque layouts are treated as portrait regardless of their
+        // physical width/height ratio. Setting landscape: false prevents the
+        // OS printer driver from auto-rotating the page based on aspect ratio.
+        landscape: false,
+        // scaleFactor: 100 ensures Chromium never auto-scales content to fit
+        // a different paper size — the @page mm dimensions are authoritative.
+        scaleFactor: 100,
       };
 
       event.sender.print(printOptions, (success, failureReason) => {

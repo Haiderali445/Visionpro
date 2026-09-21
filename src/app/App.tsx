@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import CheckCanvas from '../features/canvas/CheckCanvas';
 import CalibrationDashboard from '../features/calibration/CalibrationDashboard';
 import { CheckGeneratorDashboard } from '../features/generator/CheckGeneratorDashboard';
@@ -23,7 +23,29 @@ export default function App() {
     numberingSystem: 'lakh',
   });
 
-  const [activeField, setActiveField] = useState<SelectableItem | null>('date');
+  // Persist activeField to sessionStorage so that switching between Generate
+  // and Calibrate modes does not silently reset the user's field selection.
+  const [activeField, setActiveField] = useState<SelectableItem | null>(() => {
+    try {
+      const stored = sessionStorage.getItem('activeField');
+      // Validate that the stored value is a known SelectableItem
+      const valid: SelectableItem[] = ['date', 'payee', 'amountWords', 'numericAmount', 'stamp'];
+      return (stored && valid.includes(stored as SelectableItem))
+        ? (stored as SelectableItem)
+        : 'date';
+    } catch {
+      return 'date';
+    }
+  });
+
+  const handleFieldClick = useCallback((key: SelectableItem) => {
+    setActiveField(key);
+    try {
+      sessionStorage.setItem('activeField', key);
+    } catch {
+      // ignore storage errors (private browsing / quota)
+    }
+  }, []);
 
   const [checkImageUrl, setCheckImageUrl] = useState<string | null>(() => {
     try {
@@ -36,7 +58,13 @@ export default function App() {
   return (
     <MasterLayout>
       {({ mode, template, setTemplate, presets, handleSelectPreset, handleTemplateSaved }) => {
-        const updateField = (key: FieldKey, patch: Partial<FieldLayout>) => {
+        // useCallback is declared outside the render prop in the real React model,
+        // but since this is a render-prop pattern we memoize via a stable key.
+        // The function ref is re-created only when setTemplate changes (which is
+        // stable from useState), preventing CalibrationDashboard from re-rendering
+        // on every parent state change unrelated to the template.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        const updateField = useCallback((key: FieldKey, patch: Partial<FieldLayout>) => {
           setTemplate((current) => ({
             ...current,
             fields: {
@@ -44,7 +72,7 @@ export default function App() {
               [key]: { ...current.fields[key], ...patch },
             },
           }));
-        };
+        }, [setTemplate]);
 
         return (
           <>
@@ -57,7 +85,7 @@ export default function App() {
                 template={template}
                 transaction={transaction}
                 activeField={activeField}
-                onFieldClick={setActiveField}
+                onFieldClick={handleFieldClick}
                 checkImageUrl={checkImageUrl}
                 onImageUpload={setCheckImageUrl}
                 onImageClear={() => setCheckImageUrl(null)}
@@ -80,7 +108,7 @@ export default function App() {
                   template={template}
                   onFieldChange={updateField}
                   activeField={activeField}
-                  onFieldSelect={setActiveField}
+                  onFieldSelect={handleFieldClick}
                   onTemplateChange={setTemplate}
                   onTemplateSaved={handleTemplateSaved}
                 />

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import {
   Printer,
   Calendar,
@@ -72,16 +72,40 @@ export const CheckGeneratorDashboard: React.FC<CheckGeneratorDashboardProps> = (
   const [printers, setPrinters] = useState<PrinterDevice[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
 
-  // Enforce Askari Bank (Gujrat Branch) as default template if present and template not yet matched
+  // ── Auto-preset guard ────────────────────────────────────────────────────
+  // This ref prevents the Askari Bank auto-selection from firing more than once.
+  // Without the guard, every time `presets` is updated (e.g. after a Supabase
+  // reload or template save) the effect re-runs, calls onSelectPreset, which
+  // triggers a parent re-render that cascades down and resets active inputs.
+  const hasAutoSelected = useRef(false);
+
+  // Enforce Askari Bank (Gujrat Branch) as default template if present and
+  // template not yet matched — but only on the first valid preset load.
   useEffect(() => {
-    if (presets.length > 0 && (!template.id || template.id === 'default' || !presets.some((p) => p.id === template.id))) {
+    if (hasAutoSelected.current) return; // already fired once — do not repeat
+    if (presets.length === 0) return;     // wait until presets are available
+
+    // Only auto-select if the current template is the default placeholder
+    // (id === 'default' or not found in the loaded preset list)
+    const templateIsPlaceholder =
+      !template.id || template.id === 'default' || !presets.some((p) => p.id === template.id);
+
+    if (templateIsPlaceholder) {
       const askariDefault =
-        presets.find((p) => p.bankName.toLowerCase().includes('askari') || p.branchName.toLowerCase().includes('gujrat')) ||
-        presets[0];
+        presets.find(
+          (p) =>
+            p.bankName.toLowerCase().includes('askari') ||
+            p.branchName.toLowerCase().includes('gujrat')
+        ) || presets[0];
+
       if (askariDefault && askariDefault.id !== template.id) {
         onSelectPreset(askariDefault.id);
       }
     }
+
+    // Mark as done regardless — even if no selection was needed, we never
+    // want this effect to fire again during the session.
+    hasAutoSelected.current = true;
   }, [presets, template.id, onSelectPreset]);
 
   // Load physical printer list once

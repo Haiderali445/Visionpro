@@ -27,6 +27,14 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
+    // Capture toast in a ref snapshot so we can call it safely inside the async
+    // function without adding it to the dependency array. Toast utility functions
+    // are stable (they don't change between renders) but ESLint's exhaustive-deps
+    // rule doesn't know that. Including `toast` as a dep would cause this effect
+    // to re-run on every render where the Toast context re-creates its functions,
+    // triggering a double Supabase fetch and potential state reset.
+    const toastRef = toast;
+
     async function initializeTemplates() {
       setIsLoading(true);
       try {
@@ -44,7 +52,7 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
         if (isMounted) {
           const errorMsg =
             err instanceof Error ? err.message : 'Could not query Supabase database.';
-          toast.error(
+          toastRef.error(
             `${errorMsg} You can configure or test with local presets.`,
             'Supabase Sync Notice'
           );
@@ -61,7 +69,10 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Intentionally omit `toast` — it is a stable utility reference, not
+    // reactive state. Adding it would cause double-fetch on every re-render.
+  }, []);
 
   const handleSelectPreset = useCallback(
     (presetId: string) => {

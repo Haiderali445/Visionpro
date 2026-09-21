@@ -1,9 +1,4 @@
-/**
- * scripts/ensure-electron.cjs
- *
- * Deterministic Electron Binary Verification & Unzipper
- * Resolves Node v26+ postinstall event-loop termination and Windows/MINGW64 path issues.
- */
+
 
 'use strict';
 
