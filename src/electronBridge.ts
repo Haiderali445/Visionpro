@@ -2,7 +2,7 @@ export interface ElectronAPI {
   printCheck: (opts?: {
     widthMm?: number;
     heightMm?: number;
-    orientation?: 'landscape' | 'portrait';
+    orientation?: 'portrait';
     inverted?: boolean;
     printerOffsetXmm?: number;
     printerOffsetYmm?: number;

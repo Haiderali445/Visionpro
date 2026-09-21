@@ -78,7 +78,7 @@ export async function loadTemplatesFromSupabase(): Promise<CheckTemplate[]> {
       branchName: t.branch_name || 'Main Branch',
       width: Number(t.width_mm),
       height: Number(t.height_mm),
-      orientation: t.orientation || 'landscape',
+      orientation: 'portrait',
       inverted: Boolean(t.inverted),
       payeeAccountOnly: Boolean(t.payee_account_only),
       stampConfig: t.stamp_config || { text: "PAYEE'S ACCOUNT ONLY", x: 0, y: 7, angle: -24, width: 30 },
@@ -112,7 +112,7 @@ export async function saveTemplateToSupabase(template: CheckTemplate): Promise<C
       branch_name: template.branchName || 'Main Branch',
       width_mm: template.width,
       height_mm: template.height,
-      orientation: template.orientation || 'landscape',
+      orientation: 'portrait',
       inverted: Boolean(template.inverted),
       payee_account_only: Boolean(template.payeeAccountOnly),
       stamp_config: template.stampConfig,
@@ -150,7 +150,7 @@ export async function createTemplateInSupabase(input: {
   branchName: string;
   width: number;
   height: number;
-  orientation?: 'landscape' | 'portrait';
+  orientation?: 'portrait';
   inverted?: boolean;
   fields?: CheckTemplate['fields'];
 }): Promise<CheckTemplate> {
@@ -169,7 +169,7 @@ export async function createTemplateInSupabase(input: {
     branchName: input.branchName,
     width: input.width,
     height: input.height,
-    orientation: input.orientation || 'landscape',
+    orientation: 'portrait',
     inverted: Boolean(input.inverted),
     payeeAccountOnly: true,
     stampConfig: { text: "PAYEE'S ACCOUNT ONLY", x: 0, y: 7, angle: -24, width: 30 },

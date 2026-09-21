@@ -17,7 +17,7 @@ import {
   Plus,
   type LucideIcon,
 } from 'lucide-react';
-import type { CheckTemplate, FieldKey, FieldLayout, SelectableItem, CheckOrientation } from '../../types';
+import type { CheckTemplate, FieldKey, FieldLayout, SelectableItem } from '../../types';
 import { saveTemplateToSupabase, createTemplateInSupabase } from '../../core/templateRepository';
 import { useToast } from '../../components/ui/Toast';
 
@@ -238,13 +238,6 @@ export const CalibrationDashboard: React.FC<CalibrationDashboardProps> = ({
     }
   }, [template, toast]);
 
-  const handleOrientationToggle = (newOrientation: CheckOrientation) => {
-    onTemplateChange((prev) => ({
-      ...prev,
-      orientation: newOrientation,
-    }));
-  };
-
   const handleInversionToggle = (inverted: boolean) => {
     onTemplateChange((prev) => ({
       ...prev,
@@ -253,7 +246,7 @@ export const CalibrationDashboard: React.FC<CalibrationDashboardProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-white overflow-hidden">
+    <div className="neo-surface flex flex-col h-full min-h-0 bg-white overflow-hidden">
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex-none px-4 py-3 border-b border-[#f0f0f0] bg-[#fafafa]">
           <div className="flex items-center justify-between mb-2">
@@ -331,38 +324,17 @@ export const CalibrationDashboard: React.FC<CalibrationDashboardProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div>
               <label className="text-[11px] text-[#6b6b6b] font-medium mb-1 block">Orientation</label>
-              <div className="inline-flex w-full rounded bg-[#ebebeb] p-0.5 text-xs font-medium">
-                <button
-                  type="button"
-                  onClick={() => handleOrientationToggle('landscape')}
-                  className={`flex-1 py-1 rounded transition-colors ${
-                    template.orientation === 'landscape'
-                      ? 'bg-white text-[#ff7a00] shadow-fluent-sm font-semibold'
-                      : 'text-[#6b6b6b]'
-                  }`}
-                >
-                  Landscape
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOrientationToggle('portrait')}
-                  className={`flex-1 py-1 rounded transition-colors ${
-                    template.orientation === 'portrait'
-                      ? 'bg-white text-[#ff7a00] shadow-fluent-sm font-semibold'
-                      : 'text-[#6b6b6b]'
-                  }`}
-                >
-                  Portrait
-                </button>
+              <div className="neo-inset flex items-center justify-center rounded bg-[#ebebeb] px-3 py-1.5 text-xs font-semibold text-[#ff7a00]">
+                Portrait / Vertical
               </div>
             </div>
 
             <div>
               <label className="text-[11px] text-[#6b6b6b] font-medium mb-1 block">
-                180° Inverted Feed
+                90° Physical Feed Rotation
               </label>
               <label className="flex items-center gap-2 cursor-pointer mt-1.5">
                 <input
@@ -373,7 +345,7 @@ export const CalibrationDashboard: React.FC<CalibrationDashboardProps> = ({
                 />
                 <span className="text-xs text-[#1f1f1f] font-medium flex items-center gap-1">
                   <RotateCw size={13} className={template.inverted ? 'text-[#ff7a00]' : 'text-gray-400'} />
-                  Rotate 180° on Print
+                  Rotate 90° on Print
                 </span>
               </label>
             </div>

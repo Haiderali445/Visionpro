@@ -79,7 +79,7 @@ export default function App() {
             {/* Canvas Viewport */}
             <section
               id="check-print-root"
-              className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden bg-[#f3f3f3]"
+              className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden bg-[#e8eef5]"
             >
               <CheckCanvas
                 template={template}
@@ -94,7 +94,7 @@ export default function App() {
             </section>
 
             {/* Sidebar Viewport */}
-            <aside className="w-[410px] flex-none min-h-0 flex flex-col border-l border-[#dedede] bg-white overflow-hidden shadow-sm">
+            <aside className="neo-surface w-[410px] flex-none min-h-0 flex flex-col border-l border-[#d6e0ea] bg-[#eef3f8] overflow-hidden">
               {mode === 'generate' ? (
                 <CheckGeneratorDashboard
                   template={template}

@@ -194,6 +194,10 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
   const dateField = template.fields.date;
   const digitCellW = 3.4;
   const digitGap = dateField?.digitGap ?? 2.8;
+  const printPageWidth = Math.min(template.width, template.height);
+  const printPageHeight = Math.max(template.width, template.height);
+  const shouldRotatePrintPaper =
+    template.inverted || template.width > template.height;
 
   return (
     <div className="flex min-h-0 min-w-0 flex-col h-full bg-[#f3f3f3] overflow-hidden">
@@ -218,7 +222,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
        * HARDWARE OFFSET:
        *   Printer shift (printerOffsetXmm / printerOffsetYmm) is applied as
        *   translate() on the paper element. If inverted feed is configured,
-       *   rotate(180deg) is chained onto the transform.
+      *   rotate(90deg) is chained onto the transform.
        *
        * SCALE WRAPPER:
        *   The .canvas-scale-wrapper is reset to no transform on print so the
@@ -231,13 +235,21 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
             /* Portrait lock — always portrait, regardless of width/height ratio.
                Overrides the global fallback in index.css for this template's
                exact physical cheque dimensions. */
-            size: ${template.width}mm ${template.height}mm portrait;
+            size: ${printPageWidth}mm ${printPageHeight}mm portrait;
             margin: 0;
           }
           html, body {
             /* Constrain the print page body to exactly the cheque paper area */
-            width: ${template.width}mm !important;
-            height: ${template.height}mm !important;
+            width: ${printPageWidth}mm !important;
+            height: ${printPageHeight}mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
+          #print-canvas-area {
+            position: relative !important;
+            width: ${printPageWidth}mm !important;
+            height: ${printPageHeight}mm !important;
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
@@ -245,11 +257,12 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
           #check-canvas-paper {
             /* Physical mm dimensions: browser resolves these at printer DPI.
                No pixel values here — coordinates are 1:1 with the physical cheque. */
+            position: absolute !important;
             width: ${template.width}mm !important;
             height: ${template.height}mm !important;
-            transform: translate(${template.printerOffsetXmm || 0}mm, ${template.printerOffsetYmm || 0}mm) ${
-        template.inverted ? 'rotate(180deg)' : ''
-      } !important;
+            left: calc(50% + ${template.printerOffsetXmm || 0}mm) !important;
+            top: calc(50% + ${template.printerOffsetYmm || 0}mm) !important;
+            transform: translate(-50%, -50%) ${shouldRotatePrintPaper ? 'rotate(90deg)' : ''} !important;
             transform-origin: center center !important;
           }
           /* Strip the scanned background image on print — only text fields print */
@@ -260,7 +273,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
       `}</style>
 
       {/* Canvas Top Toolbar (hidden on print via .print-hide) */}
-      <div className="print-hide flex-none flex items-center justify-between px-4 py-2.5 border-b border-[#e5e5e5] bg-white">
+      <div className="neo-surface print-hide flex-none flex items-center justify-between px-4 py-2.5 border-b border-[#d6e0ea] bg-white">
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold text-[#1f1f1f]">
             {template.bankName}
@@ -276,7 +289,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
           {template.inverted && (
             <span className="flex items-center gap-1 text-[10px] font-semibold bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">
               <RotateCw size={11} />
-              180° Inverted Feed
+              90° Physical Feed Rotation
             </span>
           )}
           {(template.printerOffsetXmm !== 0 || template.printerOffsetYmm !== 0) && (
@@ -519,7 +532,9 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                         color: '#1a1a1a',
                         lineHeight: 1.2,
                         padding: '2px 4px',
-                        whiteSpace: 'nowrap',
+                        maxWidth: `${Math.max(0, template.width - field.x - 2)}mm`,
+                        overflowWrap: 'anywhere',
+                        whiteSpace: 'normal',
                       }}
                     >
                       {line1 || (mode === 'calibrate' ? '[Amount in Words]' : '')}
@@ -543,7 +558,9 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                           color: '#1a1a1a',
                           lineHeight: 1.2,
                           padding: '2px 4px',
-                          whiteSpace: 'nowrap',
+                          maxWidth: `${Math.max(0, template.width - field.x - 2)}mm`,
+                          overflowWrap: 'anywhere',
+                          whiteSpace: 'normal',
                         }}
                       >
                         {line2}
@@ -574,7 +591,9 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                     color: '#1a1a1a',
                     lineHeight: 1.2,
                     padding: '2px 4px',
-                    whiteSpace: 'nowrap',
+                    maxWidth: `${Math.max(0, template.width - field.x - 2)}mm`,
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
                   }}
                 >
                   {textValue || (mode === 'calibrate' ? `[${field.label}]` : '')}
