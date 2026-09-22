@@ -23,12 +23,9 @@ export default function App() {
     numberingSystem: 'lakh',
   });
 
-  // Persist activeField to sessionStorage so that switching between Generate
-  // and Calibrate modes does not silently reset the user's field selection.
   const [activeField, setActiveField] = useState<SelectableItem | null>(() => {
     try {
       const stored = sessionStorage.getItem('activeField');
-      // Validate that the stored value is a known SelectableItem
       const valid: SelectableItem[] = ['date', 'payee', 'amountWords', 'numericAmount', 'stamp'];
       return (stored && valid.includes(stored as SelectableItem))
         ? (stored as SelectableItem)
@@ -43,7 +40,7 @@ export default function App() {
     try {
       sessionStorage.setItem('activeField', key);
     } catch {
-      // ignore storage errors (private browsing / quota)
+      // ignore storage errors
     }
   }, []);
 
@@ -58,13 +55,9 @@ export default function App() {
   return (
     <MasterLayout>
       {({ mode, template, setTemplate, presets, handleSelectPreset, handleTemplateSaved }) => {
-        // useCallback is declared outside the render prop in the real React model,
-        // but since this is a render-prop pattern we memoize via a stable key.
-        // The function ref is re-created only when setTemplate changes (which is
-        // stable from useState), preventing CalibrationDashboard from re-rendering
-        // on every parent state change unrelated to the template.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        const updateField = useCallback((key: FieldKey, patch: Partial<FieldLayout>) => {
+        // Regular function instead of useCallback inside a render prop, 
+        // or you can safely remove useCallback here since it's re-created per render anyway.
+        const updateField = (key: FieldKey, patch: Partial<FieldLayout>) => {
           setTemplate((current) => ({
             ...current,
             fields: {
@@ -72,7 +65,7 @@ export default function App() {
               [key]: { ...current.fields[key], ...patch },
             },
           }));
-        }, [setTemplate]);
+        };
 
         return (
           <>
