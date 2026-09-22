@@ -107,6 +107,7 @@ ipcMain.handle('print:check', async (event, opts = {}) => {
   const {
     widthMm = 178,
     heightMm = 74,
+    inverted = false,
     silent = true,
     deviceName = '',
     printerOffsetXmm = 0,
@@ -114,8 +115,12 @@ ipcMain.handle('print:check', async (event, opts = {}) => {
     dryRun = false,
   } = opts || {};
 
-  const widthMicrons = Math.round(Number(widthMm) * 1000);
-  const heightMicrons = Math.round(Number(heightMm) * 1000);
+  const normalizedWidthMm = Number(widthMm);
+  const normalizedHeightMm = Number(heightMm);
+  const printWidthMm = Math.min(normalizedWidthMm, normalizedHeightMm);
+  const printHeightMm = Math.max(normalizedWidthMm, normalizedHeightMm);
+  const widthMicrons = Math.round(printWidthMm * 1000);
+  const heightMicrons = Math.round(printHeightMm * 1000);
 
   try {
     const printers = await event.sender.getPrintersAsync();

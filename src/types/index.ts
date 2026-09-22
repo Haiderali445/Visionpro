@@ -2,7 +2,7 @@ export type AppMode = 'generate' | 'calibrate';
 
 export type FieldKey = 'date' | 'payee' | 'amountWords' | 'numericAmount';
 export type SelectableItem = FieldKey | 'stamp';
-export type CheckOrientation = 'landscape' | 'portrait';
+export type CheckOrientation = 'portrait';
 
 export interface StampConfig {
   text?: string;
@@ -35,7 +35,7 @@ export interface CheckTemplate {
   width: number; // width in mm
   height: number; // height in mm
   orientation: CheckOrientation;
-  inverted: boolean; // 180-degree physical feed inversion
+  inverted: boolean; // 90-degree physical feed rotation
   payeeAccountOnly?: boolean;
   stampConfig?: StampConfig;
   printerOffsetXmm: number; // hardware printer shift X in mm

@@ -224,7 +224,7 @@ export const CheckGeneratorDashboard: React.FC<CheckGeneratorDashboardProps> = (
   const isoDate = digitsToIsoDate(transaction.date);
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-white overflow-hidden">
+    <div className="neo-surface flex flex-col h-full min-h-0 bg-white overflow-hidden">
       {/* Preset Bank Header */}
       <div className="flex-none px-4 py-2.5 border-b border-[#f0f0f0] bg-[#fafafa]">
         <div className="flex items-center justify-between">

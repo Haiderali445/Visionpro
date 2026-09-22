@@ -95,7 +95,7 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <main className="flex flex-col h-screen w-screen overflow-hidden bg-[#f5f5f5] text-[#1f1f1f]">
+    <main className="neo-ui flex flex-col h-screen w-screen overflow-hidden bg-[#e8eef5] text-[#1c2b3a]">
       {isLoading && (
         <LoadingOverlay
           message="Connecting to Supabase..."
@@ -104,7 +104,7 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
       )}
 
       {/* Top Application Header (Master Page Header Content PlaceHolder equivalent) */}
-      <header className="flex-none flex h-14 items-center justify-between border-b border-[#dedede] bg-white px-5 z-10">
+      <header className="neo-surface flex-none flex h-14 items-center justify-between border-b border-[#d6e0ea] bg-[#eef3f8] px-5 z-10">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="VisionBird Technologies" className="h-6 object-contain" />
@@ -123,7 +123,7 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
         </div>
 
         {/* Mode Toggle Switch */}
-        <div className="inline-flex rounded-lg bg-[#f0f0f0] p-1 border border-[#e0e0e0] shadow-inner">
+        <div className="neo-inset inline-flex rounded-lg bg-[#e0e8f0] p-1 border border-[#d6e0ea]">
           <button
             type="button"
             onClick={() => setMode('generate')}
@@ -171,7 +171,7 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
       </div>
 
       {/* Footer Content PlaceHolder equivalent */}
-     <footer className="print-hide flex-none h-8 px-5 bg-white border-t border-[#dedede] flex items-center justify-between text-[11px] text-[#6b6b6b]">
+    <footer className="neo-surface print-hide flex-none h-8 px-5 bg-[#eef3f8] border-t border-[#d6e0ea] flex items-center justify-between text-[11px] text-[#6b7b8d]">
   <div className="flex items-center gap-2">
     <span className="font-semibold text-[#1f1f1f]">VisionCheck Pro</span>
     <span className="text-[#d1d1d1]">•</span>
