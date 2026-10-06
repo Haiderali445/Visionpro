@@ -192,21 +192,46 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
   };
 
   const dateField = template.fields.date;
-  const digitCellW = 3.4;
-  const digitGap = dateField?.digitGap ?? 2.8;
-  const printPageWidth = Math.min(template.width, template.height);
-  const printPageHeight = Math.max(template.width, template.height);
+  const dateFontSize = dateField?.fontSize || 12;
+  const desiredDigitCellW = Math.max(2.8, (dateFontSize * 0.6 * 25.4) / 72);
+  const desiredDigitGap = Math.max(0, dateField?.digitGap ?? 2.8);
+  const dateFieldPaddingMm = 2 / BASE_PX_PER_MM;
+  const availableDateWidthMm = Math.max(0, template.width - dateFieldPaddingMm);
+  const desiredDateWidthMm =
+    8 * desiredDigitCellW + 7 * desiredDigitGap + dateFieldPaddingMm;
+  const dateLayoutScale = Math.min(1, availableDateWidthMm / desiredDateWidthMm);
+  const digitCellW = desiredDigitCellW * dateLayoutScale;
+  const digitGap = desiredDigitGap * dateLayoutScale;
+  const fittedDateWidthMm =
+    8 * digitCellW + 7 * digitGap + dateFieldPaddingMm;
+  const dateFieldX = Math.max(
+    0,
+    Math.min(dateField?.x ?? 0, template.width - fittedDateWidthMm)
+  );
+  const fittedDateFontSize = dateFontSize * dateLayoutScale;
+
+  const printSheetWidth = 210;
+  const printSheetHeight = 297;
   const shouldRotatePrintPaper =
     template.inverted || template.width > template.height;
+
+  const printPaperLeftMm = 0;
+  const printPaperTopMm = 0;
+  const paperCenterCorrectionX = shouldRotatePrintPaper
+    ? (template.width - template.height) / 2
+    : 0;
+  const paperCenterCorrectionY = shouldRotatePrintPaper
+    ? (template.height - template.width) / 2
+    : 0;
 
   return (
     <div className="flex min-h-0 min-w-0 flex-col h-full bg-[#f3f3f3] overflow-hidden">
       {/**
        * ── Per-Template Print Stylesheet ──────────────────────────────────────
        *
-       * This <style> block is injected at runtime and overrides the global
-       * @page rule in index.css with the exact physical dimensions for this
-       * specific cheque template.
+       * This <style> block is injected at runtime and keeps print output on A4,
+       * positioning the cheque at the page origin and orienting its date edge
+       * toward the top of the portrait page.
        *
        * ORIENTATION LOCK:
        *   The `portrait` keyword is emitted unconditionally for every cheque
@@ -220,9 +245,9 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
        *   these at the printer DPI (not screen 96 DPI) for accurate sizing.
        *
        * HARDWARE OFFSET:
-       *   Printer shift (printerOffsetXmm / printerOffsetYmm) is applied as
-       *   translate() on the paper element. If inverted feed is configured,
-      *   rotate(90deg) is chained onto the transform.
+       *   Printer shift (printerOffsetXmm / printerOffsetYmm) is applied to the
+       *   top-left paper anchor. Landscape cheque layouts rotate counterclockwise
+       *   around the paper center so their right edge faces the top of the page.
        *
        * SCALE WRAPPER:
        *   The .canvas-scale-wrapper is reset to no transform on print so the
@@ -232,24 +257,22 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
       <style>{`
         @media print {
           @page {
-            /* Portrait lock — always portrait, regardless of width/height ratio.
-               Overrides the global fallback in index.css for this template's
-               exact physical cheque dimensions. */
-            size: ${printPageWidth}mm ${printPageHeight}mm portrait;
+            /* Keep the print sheet at A4 portrait. */
+            size: ${printSheetWidth}mm ${printSheetHeight}mm portrait;
             margin: 0;
           }
           html, body {
             /* Constrain the print page body to exactly the cheque paper area */
-            width: ${printPageWidth}mm !important;
-            height: ${printPageHeight}mm !important;
+            width: ${printSheetWidth}mm !important;
+            height: ${printSheetHeight}mm !important;
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
           }
           #print-canvas-area {
             position: relative !important;
-            width: ${printPageWidth}mm !important;
-            height: ${printPageHeight}mm !important;
+            width: ${printSheetWidth}mm !important;
+            height: ${printSheetHeight}mm !important;
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
@@ -260,9 +283,9 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
             position: absolute !important;
             width: ${template.width}mm !important;
             height: ${template.height}mm !important;
-            left: calc(50% + ${template.printerOffsetXmm || 0}mm) !important;
-            top: calc(50% + ${template.printerOffsetYmm || 0}mm) !important;
-            transform: translate(-50%, -50%) ${shouldRotatePrintPaper ? 'rotate(90deg)' : ''} !important;
+            left: ${printPaperLeftMm - paperCenterCorrectionX + (template.printerOffsetXmm || 0)}mm !important;
+            top: ${printPaperTopMm - paperCenterCorrectionY + (template.printerOffsetYmm || 0)}mm !important;
+            transform: ${shouldRotatePrintPaper ? 'rotate(-90deg)' : 'none'} !important;
             transform-origin: center center !important;
           }
           /* Strip the scanned background image on print — only text fields print */
@@ -615,7 +638,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                       : 'hover:outline hover:outline-1 hover:outline-[#ff7a00]/40 z-10'
                   }`}
                   style={{
-                    left: `${dateField.x}mm`,
+                    left: `${dateFieldX}mm`,
                     top: `${dateField.y}mm`,
                     gap: `${digitGap}mm`,
                     padding: '1px',
@@ -628,7 +651,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                       style={{
                         width: `${digitCellW}mm`,
                         height: '5.2mm',
-                        fontSize: `${dateField.fontSize || 12}pt`,
+                        fontSize: `${fittedDateFontSize}pt`,
                         lineHeight: 1,
                       }}
                     >

@@ -152,6 +152,27 @@ erDiagram
 
 ---
 
+## 🖨️ Print Page and Cheque Layout
+
+Print output uses an **A4 portrait sheet (210 × 297 mm)** as its page reference.
+The selected cheque template from the database remains the physical cheque
+layout: its width, height, field coordinates, and printer calibration offsets
+are expressed in millimetres. A landscape-sized template is rotated
+counterclockwise for portrait output so its right/date edge faces the top of the
+page. This rotation changes the template's orientation, not its physical size.
+
+The eight date digits are laid out as one group. If their configured cell widths
+and gaps would exceed the template width, the group is proportionally reduced
+and shifted left only as much as needed to keep it inside the template.
+
+The A4 page's CSS margins are zero. Physical printers can still have
+non-printable areas at the edges, which depend on the printer and driver;
+configured `printerOffsetXmm` and `printerOffsetYmm` values compensate for
+hardware alignment. Validate final placement with the target printer or its
+print preview before printing cheque stock.
+
+---
+
 ## 💻 Local Setup Guide
 
 ### Prerequisites

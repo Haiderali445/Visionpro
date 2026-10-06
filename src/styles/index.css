@@ -153,12 +153,10 @@
 @media print {
   @page {
     /*
-     * Force portrait orientation globally. The per-template @page rule injected
-     * by CheckCanvas.tsx overrides this with the exact physical mm dimensions
-     * (e.g. `size: 178mm 74mm portrait`). This rule is the safe fallback that
-     * prevents the OS driver from auto-rotating when no template rule is active.
+     * Keep browser print output on A4 portrait. CheckCanvas sets the cheque's
+     * exact position within this page.
      */
-    size:178mm 74mm  portrait;
+    size: 210mm 297mm portrait;
     margin: 0;
   }
 
