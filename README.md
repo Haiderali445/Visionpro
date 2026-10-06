@@ -33,7 +33,7 @@
 
 ```text
 project/
-├── 📁 release/                 # Electron-builder standalone outputs (.exe / portable)
+├── 📁 release/                 # Windows NSIS customer installer
 ├── 📁 src/
 │   ├── 📁 app/                 # Root App lifecycle & MasterLayout state orchestration
 │   ├── 📁 components/          # Fluent UI primitives, Toast provider, MasterLayout
@@ -192,56 +192,72 @@ npm run electron:dev
 
 ## 📦 Production Release & Packaging Guide
 
-### Package Configuration (`package.json`)
+### Windows Customer Installer
 
-Ensure your `package.json` includes `electron-builder` settings targeting Windows NSIS and Portable formats:
+The project already includes its Electron main process in `electron.cjs` and
+its isolated preload bridge in `preload.cjs`; a second `main.js` is not needed.
+The main process opens the packaged Vite build from `dist/index.html`, maximizes
+the application window, and exposes only the printer APIs over IPC. The
+renderer uses `contextIsolation`, disables `nodeIntegration`, and enables the
+Chromium security boundary.
 
-```json
-{
-  "scripts": {
-    "build:ui": "vite build",
-    "package:win": "npm run build:ui && electron-builder --win"
-  },
-  "build": {
-    "appId": "com.visionbird.checkcraft",
-    "productName": "VisionCheck Pro",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "electron.cjs",
-      "preload.cjs"
-    ],
-    "win": {
-      "target": ["nsis", "portable"],
-      "icon": "public/icon.ico"
-    }
-  }
-}
+The `build` configuration in `package.json` produces an x64 Windows **NSIS
+one-click installer only**. It creates a desktop and Start Menu shortcut and
+launches the application when installation completes. The output directory is
+`release/`, and the installer filename follows
+`VisionCheck-Pro-Setup-<version>.exe`.
 
+#### Requirements
+
+- Windows 10/11 x64 build machine (or a compatible Windows CI runner).
+- Node.js 20.19+ or 22.12+ with npm.
+- Network access for dependency and Electron downloads on a clean build.
+- A Windows `.ico` file at `public/icon.ico`. The configured icon is a
+  multi-size icon derived from `public/logo.png`; replace it at that path with
+  the final customer-approved icon before release if different branding is
+  required. Electron-builder requires an icon containing a 256 × 256 image.
+
+#### Build from a clean checkout
+
+```powershell
+git clone <repository-url>
+cd <repository-folder>
+npm ci
+npm run dist:win
 ```
 
-### Step-by-Step Release Generation
+`dist:win` verifies the Electron binary, runs the TypeScript type-check and Vite
+production build, then invokes electron-builder for NSIS x64 packaging without
+publishing to a release service. The customer installer is written to:
 
-1. Validate frontend build and TypeScript types.
-2. Run the packaging command:
-```bash
-npm run package:win
-
+```text
+release/VisionCheck-Pro-Setup-<version>.exe
 ```
 
+Only the NSIS installer target is enabled; no portable executable is built.
+Before distributing the installer, test it on a clean Windows machine, verify
+that the desktop shortcut and first launch work, and exercise printer discovery
+and check printing against the target printer. For CI/CD, use a Windows runner
+and the same clean-checkout build sequence above, then publish only the
+generated `.exe` as the customer installer. Electron-builder may also leave
+update metadata and an unpacked staging directory under `release/`; these are
+not required for one-time installer distribution. Keep signing certificates
+and Supabase credentials in the CI secret store; never commit them to the
+repository. If the Vite build needs Supabase configuration, provide
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from CI secrets as build-time
+environment variables. For a trusted Windows release, configure an
+Authenticode certificate through electron-builder's `CSC_LINK` and
+`CSC_KEY_PASSWORD` environment variables; installers built without a signing
+certificate may show Windows SmartScreen warnings.
 
-3. Locate compiled artifacts inside `release/`:
-* `VisionCheck Pro Setup X.X.X.exe` (NSIS installer)
-* `VisionCheck Pro X.X.X portable.exe` (Portable binary)
-
-
+To use another app identity, update `appId` in `package.json`. To change the
+product branding, update `productName` and replace `public/icon.ico` with a
+valid Windows icon file.
 
 ### Enterprise / Client Deployment Notes
 
 * **Custom Form Registration**: For impact/thermal continuous feed checks, open Windows **Print Server Properties** on the target client machine, create a custom paper form matching check dimensions (`178mm x 74mm`), and assign it to the thermal printer driver.
-* **Database Isolation**: Pass client-specific Supabase credentials via a `.env.production` file prior to running `package:win` if separate tenant databases are required.
+* **Database Isolation**: Provide client-specific Supabase credentials through build-time environment variables before running `npm run dist:win` if separate tenant databases are required. Never commit production credentials.
 
 ---
 

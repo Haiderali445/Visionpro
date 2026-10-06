@@ -1,9 +1,8 @@
 'use strict';
 
-process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
-
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 // Prevent launching multiple app instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -38,7 +37,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
       webSecurity: true,
     },
   });
@@ -49,18 +48,59 @@ function createWindow() {
   }
 
   if (isDev) {
-    mainWindow.loadURL(DEV_URL);
+    mainWindow.loadURL(DEV_URL).catch((err) => {
+      console.error('[Window load error]:', err);
+    });
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+    mainWindow.loadFile(path.join(app.getAppPath(), 'dist', 'index.html')).catch((err) => {
+      console.error('[Window load error]:', err);
+    });
   }
 
   mainWindow.once('ready-to-show', () => {
+    mainWindow.maximize();
     mainWindow.show();
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:') {
+        shell.openExternal(url).catch((err) => {
+          console.error('[External link error]:', err);
+        });
+      }
+    } catch (err) {
+      console.error('[Invalid external link]:', err);
+    }
     return { action: 'deny' };
+  });
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    let isTrustedNavigation = false;
+    try {
+      const target = new URL(url);
+      isTrustedNavigation = isDev
+        ? target.origin === new URL(DEV_URL).origin
+        : target.protocol === 'file:' &&
+          target.pathname ===
+            pathToFileURL(path.join(app.getAppPath(), 'dist', 'index.html')).pathname;
+    } catch (err) {
+      console.error('[Navigation URL error]:', err);
+    }
+
+    if (isTrustedNavigation) return;
+    event.preventDefault();
+
+    try {
+      const target = new URL(url);
+      if (target.protocol === 'https:' || target.protocol === 'http:') {
+        shell.openExternal(url).catch((err) => {
+          console.error('[External navigation error]:', err);
+        });
+      }
+    } catch (err) {
+      console.error('[Blocked navigation URL]:', err);
+    }
   });
 
   mainWindow.on('closed', () => {

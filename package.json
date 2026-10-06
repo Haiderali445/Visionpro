@@ -1,6 +1,7 @@
 {
   "name": "check-template-configuration",
-  "productName": "Check Template Configuration",
+  "productName": "VisionCheck Pro",
+  "description": "VisionCheck Pro desktop cheque generation and printing application",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -13,11 +14,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "postinstall": "node scripts/ensure-electron.cjs",
     "electron:dev": "node scripts/ensure-electron.cjs && concurrently -k -n VITE,ELECTRON -c cyan,yellow \"vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "node scripts/ensure-electron.cjs && vite build && electron-builder --win --x64"
+    "dist:win": "node scripts/ensure-electron.cjs && npm run typecheck && npm run build && electron-builder --win nsis --x64 --publish never",
+    "electron:build": "npm run dist:win"
   },
   "build": {
-    "appId": "com.checktemplate.app",
-    "productName": "Check Template Configuration",
+    "appId": "com.visionbird.checkcraft",
+    "productName": "VisionCheck Pro",
     "directories": {
       "output": "release"
     },
@@ -36,11 +38,13 @@
     "win": {
       "target": "nsis",
       "icon": "public/icon.ico",
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "artifactName": "VisionCheck-Pro-Setup-${version}.${ext}"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "shortcutName": "VisionCheck Pro",
       "installerIcon": "public/icon.ico",
       "uninstallerIcon": "public/icon.ico",
       "createDesktopShortcut": true,

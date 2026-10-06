@@ -46,6 +46,20 @@ function splitAmountWords(text: string, maxLine1Chars = 38): { line1: string; li
   return { line1, line2 };
 }
 
+function appendAmountWordsOnly(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed || /\bONLY\b\s*$/i.test(trimmed)) return trimmed;
+  return `${trimmed} ONLY`;
+}
+
+function encloseNumericAmount(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+
+  const amount = trimmed.replace(/^=+\s*/, '').replace(/\s*\/=+$/, '').trim();
+  return amount ? `=${amount}/=` : '';
+}
+
 const FIELD_KEYS = ['date', 'payee', 'amountWords', 'numericAmount'] as const;
 
 export const CheckCanvas: React.FC<CheckCanvasProps> = ({
@@ -166,9 +180,11 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
       : transaction?.payee ?? template.fields.payee?.value ?? (mode === 'calibrate' ? '[Payee Name]' : '');
 
   const amountWordsValue =
-    transaction?.amountWords ??
-    template.fields.amountWords?.value ??
-    (mode === 'calibrate' ? '[Amount in Words]' : '');
+    appendAmountWordsOnly(
+      transaction?.amountWords ??
+        template.fields.amountWords?.value ??
+        (mode === 'calibrate' ? '[Amount in Words]' : '')
+    );
 
   const rawNumeric =
     transaction?.numericAmount ??
@@ -177,6 +193,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
 
   const numericDisplay =
     rawNumeric && mode === 'generate' ? formatCurrencyWithCommas(rawNumeric) : rawNumeric;
+  const numericDisplayWithMarkers = encloseNumericAmount(numericDisplay);
 
   const isCrossingActive =
     transaction !== undefined
@@ -589,7 +606,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                 );
               }
 
-              const textValue = key === 'payee' ? payeeValue : numericDisplay;
+              const textValue = key === 'payee' ? payeeValue : numericDisplayWithMarkers;
 
               return (
                 <div
