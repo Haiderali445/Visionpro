@@ -105,9 +105,6 @@ ipcMain.handle('printer:list', async (event) => {
 // IPC: Check printing with telemetry, offset matrix, and dry-run protection
 ipcMain.handle('print:check', async (event, opts = {}) => {
   const {
-    widthMm = 178,
-    heightMm = 74,
-    inverted = false,
     silent = true,
     deviceName = '',
     printerOffsetXmm = 0,
@@ -115,10 +112,9 @@ ipcMain.handle('print:check', async (event, opts = {}) => {
     dryRun = false,
   } = opts || {};
 
-  const normalizedWidthMm = Number(widthMm);
-  const normalizedHeightMm = Number(heightMm);
-  const printWidthMm = Math.min(normalizedWidthMm, normalizedHeightMm);
-  const printHeightMm = Math.max(normalizedWidthMm, normalizedHeightMm);
+  // The cheque template is positioned on an A4 portrait reference sheet.
+  const printWidthMm = 210;
+  const printHeightMm = 297;
   const widthMicrons = Math.round(printWidthMm * 1000);
   const heightMicrons = Math.round(printHeightMm * 1000);
 
@@ -156,10 +152,8 @@ ipcMain.handle('print:check', async (event, opts = {}) => {
         deviceName: physicalPrinter,
         pageSize: { width: widthMicrons, height: heightMicrons },
         margins: { marginType: 'none' },
-        // ── Orientation Lock ────────────────────────────────────────────────
-        // All cheque layouts are treated as portrait regardless of their
-        // physical width/height ratio. Setting landscape: false prevents the
-        // OS printer driver from auto-rotating the page based on aspect ratio.
+        // Keep the A4 reference sheet in portrait; the renderer rotates the
+        // cheque template inside the sheet as needed.
         landscape: false,
         // scaleFactor: 100 ensures Chromium never auto-scales content to fit
         // a different paper size — the @page mm dimensions are authoritative.

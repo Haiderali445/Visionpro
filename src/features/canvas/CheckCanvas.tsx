@@ -194,19 +194,37 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
   const dateField = template.fields.date;
   const digitCellW = 3.4;
   const digitGap = dateField?.digitGap ?? 2.8;
-  const printPageWidth = Math.min(template.width, template.height);
-  const printPageHeight = Math.max(template.width, template.height);
+  const printPageWidth = 210;
+  const printPageHeight = 297;
   const shouldRotatePrintPaper =
     template.inverted || template.width > template.height;
+  const dataShiftCoordinate = shouldRotatePrintPaper ? 'y' : 'x';
+  const dataEdgeOffsetMm = Math.min(
+    ...FIELD_KEYS.map(
+      (key) => template.fields[key]?.[dataShiftCoordinate] ?? template.width
+    )
+  );
+  const printDataShiftMm = Math.min(
+    15 / BASE_PX_PER_MM,
+    Math.max(0, dataEdgeOffsetMm)
+  );
+  const printDataTranslate = shouldRotatePrintPaper
+    ? `0 -${printDataShiftMm}mm`
+    : `-${printDataShiftMm}mm 0`;
+  const paperCenterCorrectionX = shouldRotatePrintPaper
+    ? (template.width - template.height) / 2
+    : 0;
+  const paperCenterCorrectionY = shouldRotatePrintPaper
+    ? (template.height - template.width) / 2
+    : 0;
 
   return (
     <div className="flex min-h-0 min-w-0 flex-col h-full bg-[#f3f3f3] overflow-hidden">
       {/**
        * ── Per-Template Print Stylesheet ──────────────────────────────────────
        *
-       * This <style> block is injected at runtime and overrides the global
-       * @page rule in index.css with the exact physical dimensions for this
-       * specific cheque template.
+       * This <style> block sets the A4 print page and positions the physical
+       * cheque template at the page's top-left corner.
        *
        * ORIENTATION LOCK:
        *   The `portrait` keyword is emitted unconditionally for every cheque
@@ -220,9 +238,9 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
        *   these at the printer DPI (not screen 96 DPI) for accurate sizing.
        *
        * HARDWARE OFFSET:
-       *   Printer shift (printerOffsetXmm / printerOffsetYmm) is applied as
-       *   translate() on the paper element. If inverted feed is configured,
-      *   rotate(90deg) is chained onto the transform.
+       *   Printer shifts are applied to the template's top-left bounding-box
+       *   anchor. Rotation compensation keeps the rotated template within the
+       *   A4 page while preserving its database field coordinates.
        *
        * SCALE WRAPPER:
        *   The .canvas-scale-wrapper is reset to no transform on print so the
@@ -232,9 +250,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
       <style>{`
         @media print {
           @page {
-            /* Portrait lock — always portrait, regardless of width/height ratio.
-               Overrides the global fallback in index.css for this template's
-               exact physical cheque dimensions. */
+            /* A4 portrait is the reference sheet for the cheque template. */
             size: ${printPageWidth}mm ${printPageHeight}mm portrait;
             margin: 0;
           }
@@ -260,10 +276,13 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
             position: absolute !important;
             width: ${template.width}mm !important;
             height: ${template.height}mm !important;
-            left: calc(50% + ${template.printerOffsetXmm || 0}mm) !important;
-            top: calc(50% + ${template.printerOffsetYmm || 0}mm) !important;
-            transform: translate(-50%, -50%) ${shouldRotatePrintPaper ? 'rotate(90deg)' : ''} !important;
+            left: ${-paperCenterCorrectionX + (template.printerOffsetXmm || 0)}mm !important;
+            top: ${-paperCenterCorrectionY + (template.printerOffsetYmm || 0)}mm !important;
+            transform: ${shouldRotatePrintPaper ? 'rotate(-90deg)' : 'none'} !important;
             transform-origin: center center !important;
+          }
+          #check-canvas-paper .print-data-field {
+            translate: ${printDataTranslate} !important;
           }
           /* Strip the scanned background image on print — only text fields print */
           #check-canvas-paper img {
@@ -517,7 +536,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                   >
                     {/* Amount Words: Line 1 */}
                     <div
-                      className={`absolute field-frame rounded-sm ${
+                      className={`print-data-field absolute field-frame rounded-sm ${
                         mode === 'calibrate' && isActive
                           ? 'ring-2 ring-[#ff7a00] bg-[#ff7a00]/[0.03] z-20'
                           : mode === 'calibrate'
@@ -543,7 +562,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                     {/* Amount Words: Line 2 */}
                     {line2 && (
                       <div
-                        className={`absolute field-frame rounded-sm ${
+                        className={`print-data-field absolute field-frame rounded-sm ${
                           mode === 'calibrate' && isActive
                             ? 'ring-2 ring-[#ff7a00] bg-[#ff7a00]/[0.03] z-20'
                             : mode === 'calibrate'
@@ -576,7 +595,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
                 <div
                   key={key}
                   onClick={() => onFieldClick(key)}
-                  className={`absolute field-frame cursor-pointer select-none rounded-sm ${
+                  className={`print-data-field absolute field-frame cursor-pointer select-none rounded-sm ${
                     mode === 'calibrate' && isActive
                       ? 'ring-2 ring-[#ff7a00] bg-[#ff7a00]/[0.03] z-20'
                       : mode === 'calibrate'
@@ -607,7 +626,7 @@ export const CheckCanvas: React.FC<CheckCanvasProps> = ({
               return (
                 <div
                   onClick={() => onFieldClick('date')}
-                  className={`absolute cursor-pointer select-none rounded-sm flex items-center ${
+                  className={`print-data-field absolute cursor-pointer select-none rounded-sm flex items-center ${
                     mode === 'calibrate' && isActive
                       ? 'ring-2 ring-[#ff7a00] bg-[#ff7a00]/[0.02] z-20'
                       : mode === 'calibrate'
