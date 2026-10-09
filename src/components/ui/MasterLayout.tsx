@@ -107,7 +107,7 @@ export const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
       <header className="neo-surface flex-none flex h-14 items-center justify-between border-b border-[#d6e0ea] bg-[#eef3f8] px-5 z-10">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="VisionBird Technologies" className="h-6 object-contain" />
+            <img src="./logo.png" alt="VisionBird Technologies" className="h-6 object-contain" />
             <span className="text-gray-300 font-light">|</span>
             <div>
               <h1 className="text-sm font-semibold text-[#1f1f1f] leading-tight">
